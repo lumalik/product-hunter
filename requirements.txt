@@ -1,0 +1,3 @@
+tqdm==4.62.3
+pickle
+playwright==1.23.0
