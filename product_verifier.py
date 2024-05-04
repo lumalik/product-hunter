@@ -3,6 +3,7 @@ import csv
 import os
 from urllib.parse import urlparse
 from tqdm import tqdm
+import os 
 
 def verify_product(url):
     with sync_playwright() as p:
@@ -29,19 +30,23 @@ def verify_product(url):
         browser.close()
     return url, status
 
-def load_processed_urls(filename):
-    if not os.path.exists(filename):
+def load_processed_urls(data_path, filename):
+    filepath = os.path.join(data_path, filename)
+    if not os.path.exists(filepath):
         return set()
-    with open(filename, 'r') as file:
+    with open(filepath, 'r') as file:
         return set(line.strip() for line in file if line.strip())
 
-def save_processed_url(filename, url):
-    with open(filename, 'a') as file:
+def save_processed_url(data_path, filename, url):
+    filepath = os.path.join(data_path, filename)
+
+    with open(filepath, 'a') as file:
         file.write(f"{url}\n")
 
+data_path = "data"
 processed_urls_file = 'processed_urls.txt'
 verified_products_file = 'verified_products.csv'
-processed_urls = load_processed_urls(processed_urls_file)
+processed_urls = load_processed_urls(data_path, processed_urls_file)
 
 keys = ["producthunt_url", "resolved_url", "status"]
 
@@ -53,7 +58,7 @@ if not os.path.exists(verified_products_file):
 
 # Process each year's product file
 for year in range(2015, 2020):
-    filename = f'{year}_producthunt.csv'
+    filename = os.path.join(data_path, f"{year}_producthunt.csv")
     with open(filename, "r") as f:
         reader = csv.DictReader(f)
         for product in tqdm(reader):
@@ -63,5 +68,5 @@ for year in range(2015, 2020):
                 with open(verified_products_file, 'a', newline='') as output_file:
                     dict_writer = csv.DictWriter(output_file, keys)
                     dict_writer.writerow({"producthunt_url":producthunt_url, "resolved_url": resolved_url, "status": status})
-                save_processed_url(processed_urls_file, producthunt_url)
+                save_processed_url(data_path, processed_urls_file, producthunt_url)
 
